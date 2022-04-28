@@ -110,6 +110,25 @@ const GameComponent = () => {
     };
   }, [gameStats.gameStatus, letterObj, increaseScore]);
 
+  // function onFocus() {
+  //   if (gameStats.gameStatus === "paused") {
+  //     pauseTheGame();
+  //   }
+  // }
+
+  function onBlur() {
+    if (gameStats.gameStatus === "playing") {
+      pauseTheGame();
+    }
+  }
+  useEffect(() => {
+    window.addEventListener("blur", onBlur);
+
+    return () => {
+      window.removeEventListener("blur", onBlur);
+    };
+  }, []);
+
   const touchDown = (id: string) => {
     if (gameStats.gameStatus === "playing") {
       let letter = letterObj.find((obj) => obj.id === id);

@@ -9,7 +9,7 @@ const PauseGameScreen: React.FC<PauseGameScreenProps> = ({ resume }) => {
         className="px-3 py-2 bg-slate-50 hover:bg-slate-400 transition-colors duration-300 hover:text-white"
         onClick={resume}
       >
-        RESTART THE GAME
+        RESUME PLAYING
       </button>
     </div>
   );
