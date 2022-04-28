@@ -10,7 +10,6 @@ interface LetterComponentProps {
   level: number;
   gameStatus: string;
   touchDown: (id: string) => void;
-  sendTheLocation: (yPos: number) => void;
 }
 
 const LetterComponent = ({
@@ -19,7 +18,6 @@ const LetterComponent = ({
   touchDown,
   level,
   gameStatus,
-  sendTheLocation,
 }: LetterComponentProps) => {
   const boxRef = useRef<Konva.Rect>(null);
   const textRef = useRef<Konva.Text>(null);

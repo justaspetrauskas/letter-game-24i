@@ -169,7 +169,6 @@ const GameComponent = () => {
                 touchDown={touchDown}
                 level={gameStats.currentLevel}
                 gameStatus={gameStats.gameStatus}
-                sendTheLocation={sendTheLocation}
                 key={index}
               />
             ))}
