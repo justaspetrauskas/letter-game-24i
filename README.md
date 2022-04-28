@@ -1,3 +1,10 @@
+
+
+
+<font size=14>[visit life version](https://letter-game-24i-1wkdcr5ok-justaspetrauskas.vercel.app/)</font>
+
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
@@ -18,6 +25,6 @@ You will also see any lint errors in the console.
 
 Install dependencies
 
-### `visit life version`
 
-[a link](https://letter-game-24i-1wkdcr5ok-justaspetrauskas.vercel.app/)
+
+
