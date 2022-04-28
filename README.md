@@ -1,7 +1,7 @@
 
 
 
-<font size="22">[visit life version](https://letter-game-24i-1wkdcr5ok-justaspetrauskas.vercel.app/)</font>
+<font size="6">[Visit life version](https://letter-game-24i-1wkdcr5ok-justaspetrauskas.vercel.app/)</font>
 
 
 
