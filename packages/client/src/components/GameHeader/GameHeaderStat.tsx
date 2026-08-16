@@ -12,7 +12,7 @@ const GameHeaderStat: React.FC<GameHeaderStatProps> = ({
   accent = false,
 }) => {
   return (
-    <div className="flex flex-col items-start justify-center px-3">
+    <div className="flex flex-col items-start justify-center px-2 sm:px-3">
       <span className="text-[0.625rem] font-bold uppercase tracking-[0.2em] text-ink-faint">
         {label}
       </span>

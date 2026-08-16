@@ -26,7 +26,7 @@ const GameHeaderLives: React.FC<GameHeaderLivesProps> = ({
   const ratio = maxLives === 0 ? 0 : Math.max(0, Math.min(lives / maxLives, 1));
 
   return (
-    <div className="flex min-w-[9rem] flex-col justify-center gap-1 px-3">
+    <div className="flex min-w-[6.5rem] flex-col justify-center gap-1 px-2 sm:min-w-[9rem] sm:px-3">
       <div className="flex flex-row items-baseline justify-between gap-2">
         <span className="text-[0.625rem] font-bold uppercase tracking-[0.2em] text-ink-faint">
           Lives

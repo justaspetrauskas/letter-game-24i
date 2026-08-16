@@ -7,7 +7,7 @@ import { useBursts } from "@/hooks/useBursts";
 import { useRoom } from "@/hooks/useRoom";
 import { useThemedRound } from "@/hooks/useThemedRound";
 import { useRival } from "@/hooks/useRival";
-import { useMatchSetup } from "@/hooks/useMatchSetup";
+import { easeConfigForViewport, useMatchSetup } from "@/hooks/useMatchSetup";
 import Game from "@/components/Game/Game";
 import GameHeader from "@/components/GameHeader/GameHeader";
 import GameStats from "@/components/GameStats/GameStats";
@@ -110,7 +110,13 @@ const App: React.FC = () => {
     effects.reset();
     restart({
       seed: current?.seed,
-      config: current?.config ?? setupConfigRef.current,
+      config:
+        current !== null
+          ? current.config
+          : easeConfigForViewport(
+              setupConfigRef.current,
+              window.innerHeight
+            ),
     });
   }, [effects.reset, restart]);
 
@@ -172,9 +178,12 @@ const App: React.FC = () => {
           <GameHeader
             state={state}
             drawerOpen={drawerOpen}
+            rivalAvailable={themedRound.available}
+            rivalMuted={rival.muted}
             onTogglePause={toggle}
             onRestart={startMatch}
             onToggleDrawer={() => setDrawerOpen((open) => !open)}
+            onToggleMute={rival.toggleMute}
           />
 
           <div className="relative flex-1 overflow-hidden">
@@ -194,7 +203,6 @@ const App: React.FC = () => {
                 muted={rival.muted}
                 thinking={rival.thinking}
                 timeMs={state.timeMs}
-                onToggleMute={rival.toggleMute}
               />
             ) : null}
 

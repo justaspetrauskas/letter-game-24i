@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import Rival from "@/components/Rival/Rival";
 
-const noop = () => undefined;
-
 function renderRival(props: {
   line?: string | null;
   muted?: boolean;
@@ -18,7 +16,6 @@ function renderRival(props: {
       muted={props.muted ?? false}
       thinking={props.thinking ?? false}
       timeMs={props.timeMs ?? 0}
-      onToggleMute={noop}
     />
   );
 }
@@ -30,17 +27,22 @@ describe("Rival", () => {
     expect(container.innerHTML).toEqual("");
   });
 
+  it("renders nothing when muted", () => {
+    const { container } = renderRival({ line: "Missed one.", muted: true });
+
+    expect(container.innerHTML).toEqual("");
+  });
+
+  it("renders nothing when it has said nothing yet", () => {
+    const { container } = renderRival({ line: null });
+
+    expect(container.innerHTML).toEqual("");
+  });
+
   it("shows a line in a bubble", () => {
     renderRival({ line: "Missed one." });
 
     expect(screen.getByText("Missed one.")).toBeDefined();
-  });
-
-  it("keeps the worm but hides the bubble when muted", () => {
-    renderRival({ line: "Missed one.", muted: true });
-
-    expect(screen.queryByText("Missed one.")).toBeNull();
-    expect(screen.getByRole("button", { name: "Unmute the rival" })).toBeDefined();
   });
 
   it("retires a line once enough engine time has passed", () => {
@@ -54,8 +56,7 @@ describe("Rival", () => {
         line="Missed one."
         muted={false}
         thinking={false}
-        timeMs={1000 + 9000}
-        onToggleMute={noop}
+        timeMs={10000}
       />
     );
 
@@ -72,16 +73,9 @@ describe("Rival", () => {
         muted={false}
         thinking={false}
         timeMs={1000}
-        onToggleMute={noop}
       />
     );
 
     expect(screen.getByText("Missed one.")).toBeDefined();
-  });
-
-  it("offers a mute control labelled for its current state", () => {
-    renderRival({ line: "Missed one." });
-
-    expect(screen.getByRole("button", { name: "Mute the rival" })).toBeDefined();
   });
 });

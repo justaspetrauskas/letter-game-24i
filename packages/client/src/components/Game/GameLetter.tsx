@@ -12,6 +12,8 @@ import {
   tileSway,
 } from "@/components/Game/GameMotion";
 
+const MIN_TILE_PX = 48;
+
 interface GameLetterProps {
   letter: LetterState;
   stageWidth: number;
@@ -31,7 +33,7 @@ const GameLetter: React.FC<GameLetterProps> = ({
   clearable,
   tokens,
 }) => {
-  const sizePx = letter.size * stageHeight;
+  const sizePx = Math.max(letter.size * stageHeight, MIN_TILE_PX);
   const isLanded = letter.status === "landed";
   const isJunk = letter.kind === "junk";
   const lit = clearable && !isLanded;

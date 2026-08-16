@@ -31,6 +31,7 @@ const GameStats: React.FC<GameStatsProps> = ({ state, children }) => {
 
   return (
     <>
+      <GameStatsField title="Match" value={`${state.config.minMatch}+`} />
       <GameStatsField title="Cleared" value={state.cleared} />
       <GameStatsField title="Accuracy" value={`${accuracy}%`} />
       <GameStatsField title="Missed" value={state.missed} />

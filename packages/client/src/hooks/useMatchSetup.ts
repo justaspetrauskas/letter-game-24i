@@ -1,11 +1,35 @@
 import { useCallback, useMemo, useState } from "react";
-import { resolveConfig, roundPresets } from "@letter-game/engine";
+import { defaultConfig, resolveConfig, roundPresets } from "@letter-game/engine";
 import type { GameConfig } from "@letter-game/engine";
 import type { ThemedRound } from "@letter-game/protocol";
 
 export type MatchMode = "solo" | "party";
 
 export const DEFAULT_ROUND_KEY = "homeRow";
+
+export const REFERENCE_HEIGHT = 820;
+
+export const MIN_SPEED_SCALE = 0.62;
+
+export function viewportSpeedScale(height: number): number {
+  if (!Number.isFinite(height) || height <= 0) {
+    return 1;
+  }
+  const scale = height / REFERENCE_HEIGHT;
+  return Math.min(Math.max(scale, MIN_SPEED_SCALE), 1);
+}
+
+export function easeConfigForViewport(
+  config: Partial<GameConfig>,
+  height: number
+): Partial<GameConfig> {
+  const scale = viewportSpeedScale(height);
+  if (scale === 1) {
+    return config;
+  }
+  const [min, max] = config.fallSpeed ?? defaultConfig.fallSpeed;
+  return { ...config, fallSpeed: [min * scale, max * scale] };
+}
 
 export interface UseMatchSetupResult {
   mode: MatchMode;
