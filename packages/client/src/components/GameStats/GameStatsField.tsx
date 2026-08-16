@@ -12,13 +12,13 @@ const GameStatsField: React.FC<GameStatsFieldProps> = ({
   accent = false,
 }) => {
   return (
-    <div className="flex w-full flex-row items-center justify-between rounded-md border border-slate-700 px-4 py-3">
-      <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">
+    <div className="flex w-full flex-row items-center justify-between rounded-sm border-2 border-panel-outline bg-panel-sunk px-3 py-2">
+      <h3 className="text-xs font-bold uppercase tracking-widest text-ink-faint">
         {title}
-      </h2>
+      </h3>
       <span
-        className={`text-2xl font-bold tabular-nums ${
-          accent ? "text-emerald-400" : "text-slate-100"
+        className={`font-display text-xl font-bold tabular-nums ${
+          accent ? "text-action" : "text-ink"
         }`}
       >
         {value}

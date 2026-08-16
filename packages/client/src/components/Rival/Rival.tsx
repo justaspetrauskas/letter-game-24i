@@ -20,14 +20,14 @@ const Rival: React.FC<RivalProps> = ({
   }
 
   return (
-    <div className="w-full rounded-md border border-slate-700 px-4 py-3">
+    <div className="w-full rounded-sm border-2 border-panel-outline bg-panel-sunk px-3 py-2">
       <div className="flex flex-row items-center justify-between">
-        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-ink-faint">
           Rival
-        </h2>
+        </h3>
         <button
           type="button"
-          className="text-xs font-bold uppercase tracking-widest text-slate-500 transition-colors duration-150 hover:text-slate-200"
+          className="text-xs font-bold uppercase tracking-widest text-ink-faint transition-colors duration-150 hover:text-ink"
           onClick={onToggleMute}
         >
           {muted ? "Unmute" : "Mute"}
@@ -35,8 +35,8 @@ const Rival: React.FC<RivalProps> = ({
       </div>
 
       <p
-        className={`mt-3 text-sm italic leading-relaxed ${
-          muted ? "text-slate-600" : "text-slate-300"
+        className={`mt-2 text-sm italic leading-relaxed ${
+          muted ? "text-ink-faint" : "text-ink-dim"
         }`}
       >
         {muted

@@ -17,6 +17,7 @@ interface UseGameOptions {
   seed?: number;
   config?: Partial<GameConfig>;
   onEvents?: (events: GameEvent[]) => void;
+  enabled?: boolean;
 }
 
 export interface RestartOptions {
@@ -44,7 +45,7 @@ function isTypingTarget(target: EventTarget | null): boolean {
 }
 
 export function useGame(options: UseGameOptions = {}): UseGameResult {
-  const { seed, config, onEvents } = options;
+  const { seed, config, onEvents, enabled = true } = options;
 
   const stateRef = useRef<GameState | null>(null);
   if (stateRef.current === null) {
@@ -74,6 +75,10 @@ export function useGame(options: UseGameOptions = {}): UseGameResult {
   }, []);
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     let frame = 0;
     let lastFrameAt = performance.now();
     let accumulator = 0;
@@ -107,7 +112,7 @@ export function useGame(options: UseGameOptions = {}): UseGameResult {
 
     frame = requestAnimationFrame(runFrame);
     return () => cancelAnimationFrame(frame);
-  }, [commit]);
+  }, [commit, enabled]);
 
   const press = useCallback(
     (key: string) => {
@@ -137,6 +142,10 @@ export function useGame(options: UseGameOptions = {}): UseGameResult {
   );
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey) {
         return;
@@ -162,7 +171,7 @@ export function useGame(options: UseGameOptions = {}): UseGameResult {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [press, toggle, commit]);
+  }, [press, toggle, commit, enabled]);
 
   return { state: snapshot, press, toggle, restart, receiveJunk };
 }

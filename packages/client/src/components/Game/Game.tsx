@@ -9,11 +9,12 @@ interface GameProps {
   state: GameState;
   onResume: () => void;
   onRestart: () => void;
+  onExit: () => void;
 }
 
 const DANGER_LINE_RATIO = 0.86;
 
-const Game: React.FC<GameProps> = ({ state, onResume, onRestart }) => {
+const Game: React.FC<GameProps> = ({ state, onResume, onRestart, onExit }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { width, height } = useStageSize(containerRef);
 
@@ -36,7 +37,7 @@ const Game: React.FC<GameProps> = ({ state, onResume, onRestart }) => {
   return (
     <div
       ref={containerRef}
-      className="relative h-full flex-1 overflow-hidden bg-slate-900"
+      className="relative h-full w-full overflow-hidden bg-sky-top"
     >
       {hasStage && (
         <Stage width={width} height={height}>
@@ -68,7 +69,12 @@ const Game: React.FC<GameProps> = ({ state, onResume, onRestart }) => {
         </Stage>
       )}
 
-      <GameOverlay state={state} onResume={onResume} onRestart={onRestart} />
+      <GameOverlay
+        state={state}
+        onResume={onResume}
+        onRestart={onRestart}
+        onExit={onExit}
+      />
     </div>
   );
 };
