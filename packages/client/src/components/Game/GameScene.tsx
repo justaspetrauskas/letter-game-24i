@@ -36,6 +36,8 @@ const BODY_PUFFS: Puff[] = [
 
 const RIM_OFFSET = 0.055;
 
+const OVERSCAN = 48;
+
 const CLOUDS: CloudSpec[] = [
   { x: 0.06, y: 0.08, width: 0.11, speed: 0.008, far: true },
   { x: 0.34, y: 0.14, width: 0.09, speed: 0.006, far: true },
@@ -58,10 +60,12 @@ const GameScene: React.FC<GameSceneProps> = ({
   return (
     <Group listening={false}>
       <Rect
-        width={width}
-        height={height}
-        fillLinearGradientStartPoint={{ x: 0, y: 0 }}
-        fillLinearGradientEndPoint={{ x: 0, y: height }}
+        x={-OVERSCAN}
+        y={-OVERSCAN}
+        width={width + OVERSCAN * 2}
+        height={height + OVERSCAN * 2}
+        fillLinearGradientStartPoint={{ x: 0, y: -OVERSCAN }}
+        fillLinearGradientEndPoint={{ x: 0, y: height + OVERSCAN }}
         fillLinearGradientColorStops={[
           0,
           tokens.skyTop,

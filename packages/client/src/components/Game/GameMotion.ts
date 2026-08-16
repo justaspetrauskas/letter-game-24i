@@ -14,8 +14,59 @@ const CLOUD_WRAP = 1.5;
 
 const CLOUD_WRAP_OFFSET = 0.35;
 
+export const SHARD_GRAVITY = 5;
+
+const SHAKE_DECAY_MS = 130;
+
+const SHAKE_FREQ_X = 17;
+
+const SHAKE_FREQ_Y = 23;
+
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
+}
+
+export function easeOut(t: number): number {
+  const inverted = 1 - clamp(t, 0, 1);
+  return 1 - inverted * inverted * inverted;
+}
+
+export function pseudoRandom(seed: number): number {
+  const x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+export function burstProgress(
+  timeMs: number,
+  atMs: number,
+  durationMs: number
+): number {
+  return (timeMs - atMs) / durationMs;
+}
+
+export function shardOffset(
+  angle: number,
+  speed: number,
+  t: number
+): { dx: number; dy: number } {
+  return {
+    dx: Math.cos(angle) * speed * t,
+    dy: Math.sin(angle) * speed * t + 0.5 * SHARD_GRAVITY * t * t,
+  };
+}
+
+export function shakeOffset(
+  elapsedMs: number,
+  magnitude: number
+): { x: number; y: number } {
+  if (elapsedMs < 0) {
+    return { x: 0, y: 0 };
+  }
+  const decay = Math.exp(-elapsedMs / SHAKE_DECAY_MS);
+  return {
+    x: magnitude * decay * Math.sin(elapsedMs / SHAKE_FREQ_X),
+    y: magnitude * decay * Math.cos(elapsedMs / SHAKE_FREQ_Y) * 0.6,
+  };
 }
 
 export function tilePhase(hue: number): number {

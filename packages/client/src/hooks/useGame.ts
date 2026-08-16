@@ -16,7 +16,7 @@ import type { GameConfig, GameEvent, GameState } from "@letter-game/engine";
 interface UseGameOptions {
   seed?: number;
   config?: Partial<GameConfig>;
-  onEvents?: (events: GameEvent[]) => void;
+  onEvents?: (events: GameEvent[], previous: GameState) => void;
   enabled?: boolean;
 }
 
@@ -67,8 +67,9 @@ export function useGame(options: UseGameOptions = {}): UseGameResult {
 
   const commit = useCallback((next: GameState) => {
     const drained = drainEvents(next);
+    const previous = stateRef.current as GameState;
     if (drained.events.length > 0 && onEventsRef.current) {
-      onEventsRef.current(drained.events);
+      onEventsRef.current(drained.events, previous);
     }
     stateRef.current = drained.state;
     setSnapshot(drained.state);

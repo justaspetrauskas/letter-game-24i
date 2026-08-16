@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useGame } from "@/hooks/useGame";
 import { PROGRESS_REPORT_MS } from "@letter-game/protocol";
 import type { AttackedPayload, ThemedRound } from "@letter-game/protocol";
-import type { GameEvent } from "@letter-game/engine";
+import type { GameEvent, GameState } from "@letter-game/engine";
+import { useBursts } from "@/hooks/useBursts";
 import { useRoom } from "@/hooks/useRoom";
 import { useThemedRound } from "@/hooks/useThemedRound";
 import { useRival } from "@/hooks/useRival";
@@ -26,6 +27,7 @@ const App: React.FC = () => {
 
   const setup = useMatchSetup();
   const rival = useRival({ enabled: aiReady });
+  const effects = useBursts();
 
   const receiveJunkRef = useRef<(count: number) => void>(() => undefined);
 
@@ -47,7 +49,8 @@ const App: React.FC = () => {
   } = useRoom({ onAttacked: handleAttacked });
 
   const handleEvents = useCallback(
-    (events: GameEvent[]) => {
+    (events: GameEvent[], previous: GameState) => {
+      effects.capture(events, previous);
       rival.observe(events);
       for (const event of events) {
         if (event.type === "clear" && event.attack > 0) {
@@ -55,7 +58,7 @@ const App: React.FC = () => {
         }
       }
     },
-    [rival.observe, sendAttack]
+    [effects.capture, rival.observe, sendAttack]
   );
 
   const { state, toggle, restart, receiveJunk } = useGame({
@@ -104,11 +107,12 @@ const App: React.FC = () => {
 
   const startMatch = useCallback(() => {
     const current = roomRef.current;
+    effects.reset();
     restart({
       seed: current?.seed,
       config: current?.config ?? setupConfigRef.current,
     });
-  }, [restart]);
+  }, [effects.reset, restart]);
 
   const handleStart = useCallback(() => {
     startMatch();
@@ -176,6 +180,8 @@ const App: React.FC = () => {
           <div className="relative flex-1 overflow-hidden">
             <Game
               state={state}
+              bursts={effects.bursts}
+              shakes={effects.shakes}
               onResume={toggle}
               onRestart={startMatch}
               onExit={handleExit}
