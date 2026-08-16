@@ -86,6 +86,21 @@ export default {
         tile: "var(--lg-font-tile)",
         body: "var(--lg-font-body)",
       },
+      keyframes: {
+        pop: {
+          "0%": { transform: "scale(0.86) translateY(8px)", opacity: "0" },
+          "65%": { transform: "scale(1.03) translateY(0)", opacity: "1" },
+          "100%": { transform: "scale(1) translateY(0)", opacity: "1" },
+        },
+        bob: {
+          "0%, 100%": { transform: "translateY(0) rotate(-3deg)" },
+          "50%": { transform: "translateY(-4px) rotate(3deg)" },
+        },
+      },
+      animation: {
+        pop: "pop 260ms ease-out",
+        bob: "bob 2.4s ease-in-out infinite",
+      },
       boxShadow: {
         chunk: "0 4px 0 0 rgb(var(--lg-panel-outline))",
         "chunk-sm": "0 2px 0 0 rgb(var(--lg-panel-outline))",

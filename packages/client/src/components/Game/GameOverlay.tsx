@@ -61,14 +61,14 @@ const GameOverlay: React.FC<GameOverlayProps> = ({
       <div className="flex flex-row gap-3">
         <button
           type="button"
-          className="rounded-md border-2 border-panel-outline bg-action px-6 py-3 font-display text-lg font-bold uppercase tracking-wider text-action-ink shadow-chunk-action transition-colors duration-150 hover:bg-action-lit"
+          className="lg-btn-action px-6 py-3 text-lg"
           onClick={isFinished ? onRestart : onResume}
         >
           {isFinished ? "Play again" : "Resume"}
         </button>
         <button
           type="button"
-          className="rounded-md border-2 border-panel-outline bg-panel-raised px-6 py-3 font-display text-lg font-bold uppercase tracking-wider text-ink shadow-chunk transition-colors duration-150 hover:bg-panel-edge"
+          className="lg-btn-panel px-6 py-3 text-lg"
           onClick={onExit}
         >
           Change setup

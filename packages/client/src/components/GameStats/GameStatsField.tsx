@@ -12,7 +12,7 @@ const GameStatsField: React.FC<GameStatsFieldProps> = ({
   accent = false,
 }) => {
   return (
-    <div className="flex w-full flex-row items-center justify-between rounded-sm border-2 border-panel-outline bg-panel-sunk px-3 py-2">
+    <div className="lg-inset flex w-full flex-row items-center justify-between px-3 py-2">
       <h3 className="text-xs font-bold uppercase tracking-widest text-ink-faint">
         {title}
       </h3>

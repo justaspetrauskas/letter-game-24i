@@ -11,9 +11,6 @@ interface GameHeaderProps {
   onToggleDrawer: () => void;
 }
 
-const buttonClass =
-  "rounded-md border-2 border-panel-outline bg-panel-raised px-4 py-2 font-display text-sm font-bold uppercase tracking-wider text-ink shadow-chunk-sm transition-colors duration-150 hover:bg-panel-edge disabled:opacity-40";
-
 const GameHeader: React.FC<GameHeaderProps> = ({
   state,
   drawerOpen,
@@ -40,18 +37,18 @@ const GameHeader: React.FC<GameHeaderProps> = ({
       <div className="ml-auto flex flex-row items-center gap-2">
         <button
           type="button"
-          className={buttonClass}
+          className="lg-btn-panel"
           onClick={onTogglePause}
           disabled={state.status === "finished"}
         >
           {state.status === "paused" ? "Resume" : "Pause"}
         </button>
-        <button type="button" className={buttonClass} onClick={onRestart}>
+        <button type="button" className="lg-btn-panel" onClick={onRestart}>
           Restart
         </button>
         <button
           type="button"
-          className={buttonClass}
+          className="lg-btn-panel"
           onClick={onToggleDrawer}
           aria-expanded={drawerOpen}
         >

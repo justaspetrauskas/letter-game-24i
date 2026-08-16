@@ -25,9 +25,6 @@ const statusDots: Record<ConnectionStatus, string> = {
   online: "bg-health-good",
 };
 
-const inputClass =
-  "rounded-sm border-2 border-panel-outline bg-panel-sunk px-3 py-2 text-sm text-ink placeholder:text-ink-faint focus:border-action focus:outline-none";
-
 const RoomSetup: React.FC<RoomSetupProps> = ({
   status,
   room,
@@ -41,7 +38,7 @@ const RoomSetup: React.FC<RoomSetupProps> = ({
   const [code, setCode] = useState("");
 
   return (
-    <div className="flex flex-col gap-3 rounded-md border-2 border-panel-outline bg-panel-sunk p-4">
+    <div className="lg-inset flex flex-col gap-3 p-4">
       <div className="flex flex-row items-center justify-between">
         <h3 className="font-display text-xs font-bold uppercase tracking-[0.2em] text-ink-faint">
           Room
@@ -58,7 +55,7 @@ const RoomSetup: React.FC<RoomSetupProps> = ({
       {room === null ? (
         <div className="flex flex-col gap-2">
           <input
-            className={inputClass}
+            className="lg-field"
             placeholder="Your name"
             value={name}
             maxLength={16}
@@ -66,14 +63,14 @@ const RoomSetup: React.FC<RoomSetupProps> = ({
           />
           <button
             type="button"
-            className="rounded-sm border-2 border-panel-outline bg-action px-3 py-2 font-display text-sm font-bold uppercase tracking-wider text-action-ink transition-colors duration-150 hover:bg-action-lit"
+            className="lg-btn-action"
             onClick={() => onCreate(name)}
           >
             Create room
           </button>
           <div className="flex flex-row gap-2">
             <input
-              className={`w-full min-w-0 uppercase tracking-widest placeholder:normal-case placeholder:tracking-normal ${inputClass}`}
+              className="lg-field w-full min-w-0 uppercase tracking-widest placeholder:normal-case placeholder:tracking-normal"
               placeholder="Code"
               value={code}
               maxLength={ROOM_CODE_LENGTH}
@@ -81,7 +78,7 @@ const RoomSetup: React.FC<RoomSetupProps> = ({
             />
             <button
               type="button"
-              className="shrink-0 rounded-sm border-2 border-panel-outline bg-panel-raised px-3 py-2 font-display text-sm font-bold uppercase tracking-wider text-ink transition-colors duration-150 hover:bg-panel-edge"
+              className="lg-btn-panel shrink-0"
               onClick={() => onJoin(code, name)}
             >
               Join

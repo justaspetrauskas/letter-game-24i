@@ -27,7 +27,7 @@ const RoomStandings: React.FC<RoomStandingsProps> = ({
   }
 
   return (
-    <div className="flex w-full flex-col gap-3 rounded-md border-2 border-panel-outline bg-panel-sunk p-3">
+    <div className="lg-inset flex w-full flex-col gap-3 p-3">
       <div className="flex flex-row items-baseline justify-between">
         <h3 className="font-display text-xs font-bold uppercase tracking-[0.2em] text-ink-faint">
           Standings

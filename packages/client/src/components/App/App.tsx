@@ -187,19 +187,23 @@ const App: React.FC = () => {
               onExit={handleExit}
             />
 
+            {state.status === "playing" ? (
+              <Rival
+                available={themedRound.available}
+                line={rival.line}
+                muted={rival.muted}
+                thinking={rival.thinking}
+                timeMs={state.timeMs}
+                onToggleMute={rival.toggleMute}
+              />
+            ) : null}
+
             <Sidebar open={drawerOpen} onClose={() => setDrawerOpen(false)}>
               <GameStats state={state}>
                 <RoomStandings
                   incoming={incoming}
                   room={room}
                   playerId={playerId}
-                />
-                <Rival
-                  available={themedRound.available}
-                  line={rival.line}
-                  muted={rival.muted}
-                  thinking={rival.thinking}
-                  onToggleMute={rival.toggleMute}
                 />
               </GameStats>
             </Sidebar>

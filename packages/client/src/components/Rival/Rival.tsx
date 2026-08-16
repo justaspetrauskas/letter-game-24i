@@ -1,11 +1,20 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
+import RivalWorm from "@/components/Rival/RivalWorm";
 
 interface RivalProps {
   available: boolean;
   line: string | null;
   muted: boolean;
   thinking: boolean;
+  timeMs: number;
   onToggleMute: () => void;
+}
+
+const LINE_LIFETIME_MS = 6500;
+
+interface ShownLine {
+  text: string;
+  atMs: number;
 }
 
 const Rival: React.FC<RivalProps> = ({
@@ -13,40 +22,65 @@ const Rival: React.FC<RivalProps> = ({
   line,
   muted,
   thinking,
+  timeMs,
   onToggleMute,
 }) => {
+  const [shown, setShown] = useState<ShownLine | null>(null);
+  const timeRef = useRef(timeMs);
+  timeRef.current = timeMs;
+
+  useEffect(() => {
+    if (line === null) {
+      return;
+    }
+    setShown({ text: line, atMs: timeRef.current });
+  }, [line]);
+
   if (!available) {
     return null;
   }
 
-  return (
-    <div className="w-full rounded-sm border-2 border-panel-outline bg-panel-sunk px-3 py-2">
-      <div className="flex flex-row items-center justify-between">
-        <h3 className="text-xs font-bold uppercase tracking-widest text-ink-faint">
-          Rival
-        </h3>
-        <button
-          type="button"
-          className="text-xs font-bold uppercase tracking-widest text-ink-faint transition-colors duration-150 hover:text-ink"
-          onClick={onToggleMute}
-        >
-          {muted ? "Unmute" : "Mute"}
-        </button>
-      </div>
+  const isFresh =
+    shown !== null &&
+    timeMs >= shown.atMs &&
+    timeMs - shown.atMs < LINE_LIFETIME_MS;
+  const speaking = !muted && isFresh;
 
-      <p
-        className={`mt-2 text-sm italic leading-relaxed ${
-          muted ? "text-ink-faint" : "text-ink-dim"
-        }`}
+  return (
+    <div className="pointer-events-none absolute bottom-3 left-3 z-[5] flex max-w-[min(28rem,60%)] flex-row items-end gap-2">
+      <button
+        type="button"
+        className="pointer-events-auto shrink-0 rounded-full transition-transform duration-150 hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-action"
+        onClick={onToggleMute}
+        aria-pressed={muted}
+        aria-label={muted ? "Unmute the rival" : "Mute the rival"}
+        title={muted ? "Unmute the rival" : "Mute the rival"}
       >
-        {muted
-          ? "Muted."
-          : line !== null
-            ? line
-            : thinking
-              ? "..."
-              : "Watching."}
-      </p>
+        <RivalWorm muted={muted} speaking={speaking} />
+      </button>
+
+      {speaking ? (
+        <div
+          key={shown.atMs}
+          className="animate-pop relative mb-2 rounded-xl border-4 border-panel-outline bg-ink px-4 py-3 shadow-chunk"
+        >
+          <span
+            className="absolute -left-[9px] bottom-3 h-3 w-3 rotate-45 border-b-4 border-l-4 border-panel-outline bg-ink"
+            aria-hidden="true"
+          />
+          <p className="font-display text-sm font-bold leading-snug text-panel-outline">
+            {shown.text}
+          </p>
+        </div>
+      ) : null}
+
+      {!muted && !speaking && thinking ? (
+        <div className="mb-2 rounded-xl border-4 border-panel-outline bg-ink px-3 py-2 shadow-chunk-sm">
+          <span className="font-display text-sm font-bold text-panel-outline">
+            ...
+          </span>
+        </div>
+      ) : null}
     </div>
   );
 };

@@ -33,7 +33,7 @@ const RoundForge: React.FC<RoundForgeProps> = ({
   };
 
   return (
-    <div className="rounded-md border-2 border-panel-outline bg-panel p-4">
+    <div className="lg-panel p-4">
       <h3 className="font-display text-xs font-bold uppercase tracking-[0.2em] text-ink-faint">
         Themed round
       </h3>
@@ -41,7 +41,7 @@ const RoundForge: React.FC<RoundForgeProps> = ({
       {available ? (
         <div className="mt-3 flex flex-col gap-2">
           <input
-            className="rounded-sm border-2 border-panel-outline bg-panel-sunk px-3 py-2 text-sm text-ink placeholder:text-ink-faint focus:border-action focus:outline-none"
+            className="lg-field"
             placeholder="deep ocean, volcano, library..."
             value={theme}
             maxLength={MAX_THEME_LENGTH}
@@ -51,7 +51,7 @@ const RoundForge: React.FC<RoundForgeProps> = ({
           />
           <button
             type="button"
-            className="rounded-sm border-2 border-panel-outline bg-panel-raised px-3 py-2 font-display text-sm font-bold uppercase tracking-wider text-ink transition-colors duration-150 hover:bg-panel-edge disabled:opacity-40"
+            className="lg-btn-panel"
             disabled={status === "loading"}
             onClick={() => onGenerate(theme)}
           >

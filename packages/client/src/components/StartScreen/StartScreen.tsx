@@ -60,7 +60,7 @@ const StartScreen: React.FC<StartScreenProps> = ({
           />
         ) : null}
 
-        <div className="rounded-md border-2 border-panel-outline bg-panel p-4">
+        <div className="lg-panel p-4">
           <StartScreenRounds
             activeKey={setup.roundKey}
             themedName={setup.themedName}
@@ -70,14 +70,14 @@ const StartScreen: React.FC<StartScreenProps> = ({
 
         {children}
 
-        <div className="rounded-md border-2 border-panel-outline bg-panel p-4">
+        <div className="lg-panel p-4">
           <StartScreenRules config={setup.resolved} mode={setup.mode} />
         </div>
 
         <div className="flex flex-col gap-2">
           <button
             type="button"
-            className="rounded-md border-2 border-panel-outline bg-action px-6 py-4 font-display text-xl font-bold uppercase tracking-wider text-action-ink shadow-chunk-action transition-colors duration-150 hover:bg-action-lit disabled:opacity-40 disabled:shadow-none"
+            className="lg-btn-action w-full px-6 py-4 text-xl"
             onClick={onStart}
             disabled={needsRoom}
           >
