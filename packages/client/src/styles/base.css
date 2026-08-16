@@ -4,8 +4,12 @@
 
 @layer base {
   body {
-    @apply bg-slate-900;
-    font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-      Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+    @apply bg-panel-sunk font-body text-ink;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
   }
 }
