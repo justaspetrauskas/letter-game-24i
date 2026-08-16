@@ -1,4 +1,8 @@
+import { existsSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import Fastify from "fastify";
+import fastifyStatic from "@fastify/static";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { STEP_MS, createGame, stepMany } from "@letter-game/engine";
 import {
@@ -21,6 +25,11 @@ import { CommentaryError, createCommentaryService } from "@/ai/commentary/commen
 import type { CommentaryService } from "@/ai/commentary/commentary";
 import { createRateLimiter } from "@/rateLimit/rateLimit";
 import type { RateLimiter } from "@/rateLimit/rateLimit";
+
+const CLIENT_DIST = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  "../../../client/dist"
+);
 
 const MAX_SIMULATED_SECONDS = 120;
 
@@ -219,6 +228,10 @@ export function buildServer(
       };
     }
   );
+
+  if (existsSync(CLIENT_DIST)) {
+    app.register(fastifyStatic, { root: CLIENT_DIST });
+  }
 
   const close = async (): Promise<void> => {
     await io.close();
