@@ -1,0 +1,67 @@
+:root {
+  --lg-sky-top: 23 27 61;
+  --lg-sky-high: 42 47 98;
+  --lg-sky-mid: 76 65 131;
+  --lg-sky-low: 150 87 140;
+  --lg-sky-horizon: 233 136 95;
+  --lg-sky-glow: 247 199 122;
+
+  --lg-cloud: 92 88 142;
+  --lg-cloud-lit: 128 120 176;
+  --lg-cloud-shade: 52 54 100;
+
+  --lg-crate: 192 127 51;
+  --lg-crate-lit: 224 168 94;
+  --lg-crate-plank: 155 101 32;
+  --lg-crate-shade: 122 78 23;
+  --lg-crate-outline: 42 22 8;
+  --lg-crate-face: 255 244 220;
+
+  --lg-dyn: 196 69 58;
+  --lg-dyn-lit: 228 105 92;
+  --lg-dyn-plank: 142 46 38;
+  --lg-dyn-outline: 58 15 11;
+  --lg-dyn-light: 255 209 102;
+
+  --lg-fuse: 107 74 42;
+  --lg-fuse-spark: 255 240 184;
+  --lg-fuse-glow: 255 182 39;
+
+  --lg-fire-core: 255 253 240;
+  --lg-fire-1: 255 216 77;
+  --lg-fire-2: 255 154 46;
+  --lg-fire-3: 229 80 42;
+  --lg-fire-4: 142 36 21;
+  --lg-smoke: 122 113 137;
+
+  --lg-panel: 43 35 64;
+  --lg-panel-raised: 58 48 84;
+  --lg-panel-sunk: 30 24 48;
+  --lg-panel-edge: 87 74 120;
+  --lg-panel-outline: 18 14 30;
+
+  --lg-ink: 251 243 228;
+  --lg-ink-dim: 185 169 198;
+  --lg-ink-faint: 124 110 144;
+
+  --lg-action: 140 198 63;
+  --lg-action-lit: 169 222 92;
+  --lg-action-ink: 23 36 10;
+
+  --lg-health-good: 111 207 63;
+  --lg-health-warn: 242 179 61;
+  --lg-health-bad: 224 69 47;
+
+  --lg-danger: 255 92 110;
+  --lg-scrim: 12 8 24;
+
+  --lg-radius-sm: 6px;
+  --lg-radius-md: 10px;
+  --lg-radius-lg: 14px;
+  --lg-radius-xl: 20px;
+
+  --lg-font-display: "Trebuchet MS", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --lg-font-tile: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --lg-font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}

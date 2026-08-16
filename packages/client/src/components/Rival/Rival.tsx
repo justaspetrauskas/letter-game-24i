@@ -1,11 +1,18 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 interface RivalProps {
   available: boolean;
   line: string | null;
   muted: boolean;
   thinking: boolean;
-  onToggleMute: () => void;
+  timeMs: number;
+}
+
+const LINE_LIFETIME_MS = 6500;
+
+interface ShownLine {
+  text: string;
+  atMs: number;
 }
 
 const Rival: React.FC<RivalProps> = ({
@@ -13,40 +20,50 @@ const Rival: React.FC<RivalProps> = ({
   line,
   muted,
   thinking,
-  onToggleMute,
+  timeMs,
 }) => {
-  if (!available) {
+  const [shown, setShown] = useState<ShownLine | null>(null);
+  const timeRef = useRef(timeMs);
+  timeRef.current = timeMs;
+
+  useEffect(() => {
+    if (line === null) {
+      return;
+    }
+    setShown({ text: line, atMs: timeRef.current });
+  }, [line]);
+
+  if (!available || muted) {
+    return null;
+  }
+
+  const isFresh =
+    shown !== null &&
+    timeMs >= shown.atMs &&
+    timeMs - shown.atMs < LINE_LIFETIME_MS;
+
+  if (!isFresh && !thinking) {
     return null;
   }
 
   return (
-    <div className="w-full rounded-md border border-slate-700 px-4 py-3">
-      <div className="flex flex-row items-center justify-between">
-        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">
-          Rival
-        </h2>
-        <button
-          type="button"
-          className="text-xs font-bold uppercase tracking-widest text-slate-500 transition-colors duration-150 hover:text-slate-200"
-          onClick={onToggleMute}
+    <div className="pointer-events-none absolute bottom-4 left-4 z-[5] max-w-[min(28rem,60%)]">
+      {isFresh ? (
+        <div
+          key={shown.atMs}
+          className="animate-pop rounded-xl border-4 border-panel-outline bg-ink px-4 py-3 shadow-chunk"
         >
-          {muted ? "Unmute" : "Mute"}
-        </button>
-      </div>
-
-      <p
-        className={`mt-3 text-sm italic leading-relaxed ${
-          muted ? "text-slate-600" : "text-slate-300"
-        }`}
-      >
-        {muted
-          ? "Muted."
-          : line !== null
-            ? line
-            : thinking
-              ? "..."
-              : "Watching."}
-      </p>
+          <p className="font-display text-sm font-bold leading-snug text-panel-outline">
+            {shown.text}
+          </p>
+        </div>
+      ) : (
+        <div className="rounded-xl border-4 border-panel-outline bg-ink px-3 py-2 shadow-chunk-sm">
+          <span className="font-display text-sm font-bold text-panel-outline">
+            ...
+          </span>
+        </div>
+      )}
     </div>
   );
 };

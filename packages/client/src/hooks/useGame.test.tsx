@@ -177,6 +177,42 @@ describe("useGame", () => {
     expect(result.current.state.rng.seed).toEqual(first.rng.seed);
   });
 
+  it("does not advance while disabled", () => {
+    const { result } = renderHook(() => useGame({ seed: 1, enabled: false }));
+
+    runFrames(200);
+
+    expect(result.current.state.timeMs).toEqual(0);
+    expect(result.current.state.spawned).toEqual(0);
+  });
+
+  it("ignores keyboard input while disabled", () => {
+    const { result } = renderHook(() =>
+      useGame({ seed: 3, config: singleLetterRound, enabled: false })
+    );
+
+    pressKeyboard(" ");
+    pressKeyboard("a");
+
+    expect(result.current.state.status).toEqual("playing");
+    expect(result.current.state.misfires).toEqual(0);
+  });
+
+  it("starts advancing once enabled flips on", () => {
+    const { result, rerender } = renderHook(
+      ({ enabled }: { enabled: boolean }) => useGame({ seed: 1, enabled }),
+      { initialProps: { enabled: false } }
+    );
+
+    runFrames(60);
+    expect(result.current.state.timeMs).toEqual(0);
+
+    rerender({ enabled: true });
+    runFrames(60);
+
+    expect(result.current.state.timeMs).toBeGreaterThan(0);
+  });
+
   it("caps catch-up so a long stall cannot fast-forward the game", () => {
     const { result } = renderHook(() => useGame({ seed: 1 }));
 

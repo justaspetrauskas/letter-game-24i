@@ -1,22 +1,33 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useGame } from "@/hooks/useGame";
-import type { RestartOptions } from "@/hooks/useGame";
 import { PROGRESS_REPORT_MS } from "@letter-game/protocol";
 import type { AttackedPayload, ThemedRound } from "@letter-game/protocol";
-import type { GameEvent } from "@letter-game/engine";
+import type { GameEvent, GameState } from "@letter-game/engine";
+import { useBursts } from "@/hooks/useBursts";
 import { useRoom } from "@/hooks/useRoom";
 import { useThemedRound } from "@/hooks/useThemedRound";
 import { useRival } from "@/hooks/useRival";
+import { easeConfigForViewport, useMatchSetup } from "@/hooks/useMatchSetup";
 import Game from "@/components/Game/Game";
+import GameHeader from "@/components/GameHeader/GameHeader";
 import GameStats from "@/components/GameStats/GameStats";
-import Room from "@/components/Room/Room";
+import Sidebar from "@/components/Sidebar/Sidebar";
+import StartScreen from "@/components/StartScreen/StartScreen";
+import RoomStandings from "@/components/Room/RoomStandings";
 import RoundForge from "@/components/RoundForge/RoundForge";
 import Rival from "@/components/Rival/Rival";
 
+type Phase = "menu" | "playing";
+
 const App: React.FC = () => {
+  const [phase, setPhase] = useState<Phase>("menu");
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [aiReady, setAiReady] = useState(false);
   const [incoming, setIncoming] = useState<AttackedPayload | null>(null);
+
+  const setup = useMatchSetup();
   const rival = useRival({ enabled: aiReady });
+  const effects = useBursts();
 
   const receiveJunkRef = useRef<(count: number) => void>(() => undefined);
 
@@ -38,7 +49,8 @@ const App: React.FC = () => {
   } = useRoom({ onAttacked: handleAttacked });
 
   const handleEvents = useCallback(
-    (events: GameEvent[]) => {
+    (events: GameEvent[], previous: GameState) => {
+      effects.capture(events, previous);
       rival.observe(events);
       for (const event of events) {
         if (event.type === "clear" && event.attack > 0) {
@@ -46,11 +58,12 @@ const App: React.FC = () => {
         }
       }
     },
-    [rival.observe, sendAttack]
+    [effects.capture, rival.observe, sendAttack]
   );
 
   const { state, toggle, restart, receiveJunk } = useGame({
     onEvents: handleEvents,
+    enabled: phase === "playing",
   });
 
   receiveJunkRef.current = receiveJunk;
@@ -64,18 +77,16 @@ const App: React.FC = () => {
     roomRef.current = room;
   }, [room]);
 
+  const setupConfigRef = useRef(setup.config);
+
+  useEffect(() => {
+    setupConfigRef.current = setup.config;
+  }, [setup.config]);
+
   const roomCode = room?.code ?? null;
-  const roomSeed = room?.seed ?? null;
 
   useEffect(() => {
-    if (room === null) {
-      return;
-    }
-    restart({ seed: room.seed, config: room.config });
-  }, [roomCode, roomSeed, restart]);
-
-  useEffect(() => {
-    if (roomCode === null) {
+    if (roomCode === null || phase !== "playing") {
       return;
     }
 
@@ -92,24 +103,45 @@ const App: React.FC = () => {
     }, PROGRESS_REPORT_MS);
 
     return () => window.clearInterval(timer);
-  }, [roomCode, reportProgress]);
+  }, [roomCode, phase, reportProgress]);
 
-  const handleRestart = useCallback(
-    (options?: RestartOptions) => {
-      restart({ seed: roomRef.current?.seed, config: options?.config });
+  const startMatch = useCallback(() => {
+    const current = roomRef.current;
+    effects.reset();
+    restart({
+      seed: current?.seed,
+      config:
+        current !== null
+          ? current.config
+          : easeConfigForViewport(
+              setupConfigRef.current,
+              window.innerHeight
+            ),
+    });
+  }, [effects.reset, restart]);
+
+  const handleStart = useCallback(() => {
+    startMatch();
+    setDrawerOpen(false);
+    setPhase("playing");
+  }, [startMatch]);
+
+  const handleExit = useCallback(() => {
+    setPhase("menu");
+  }, []);
+
+  const handleCreateRoom = useCallback(
+    (name: string) => {
+      createRoom(name, setupConfigRef.current);
     },
-    [restart]
+    [createRoom]
   );
-
-  const handleOverlayRestart = useCallback(() => {
-    handleRestart();
-  }, [handleRestart]);
 
   const handleGeneratedRound = useCallback(
     (generated: ThemedRound) => {
-      handleRestart({ config: generated.config });
+      setup.selectThemed(generated);
     },
-    [handleRestart]
+    [setup.selectThemed]
   );
 
   const themedRound = useThemedRound({ onRound: handleGeneratedRound });
@@ -119,35 +151,73 @@ const App: React.FC = () => {
   }, [themedRound.available]);
 
   return (
-    <div className="flex h-screen w-full flex-row overflow-hidden bg-slate-900 text-slate-100">
-      <Game state={state} onResume={toggle} onRestart={handleOverlayRestart} />
-      <GameStats state={state} onTogglePause={toggle} onRestart={handleRestart}>
-        <Rival
-          available={themedRound.available}
-          line={rival.line}
-          muted={rival.muted}
-          thinking={rival.thinking}
-          onToggleMute={rival.toggleMute}
-        />
-        <RoundForge
-          serverReachable={themedRound.serverReachable}
-          available={themedRound.available}
-          status={themedRound.status}
-          round={themedRound.round}
-          error={themedRound.error}
-          onGenerate={themedRound.generate}
-        />
-        <Room
-          incoming={incoming}
-          status={status}
+    <div className="flex h-screen w-full flex-col overflow-hidden bg-panel-sunk text-ink">
+      {phase === "menu" ? (
+        <StartScreen
+          setup={setup}
+          roomStatus={status}
           room={room}
           playerId={playerId}
-          error={error}
-          onCreate={createRoom}
-          onJoin={joinRoom}
-          onLeave={leaveRoom}
-        />
-      </GameStats>
+          roomError={error}
+          onCreateRoom={handleCreateRoom}
+          onJoinRoom={joinRoom}
+          onLeaveRoom={leaveRoom}
+          onStart={handleStart}
+        >
+          <RoundForge
+            serverReachable={themedRound.serverReachable}
+            available={themedRound.available}
+            status={themedRound.status}
+            round={themedRound.round}
+            error={themedRound.error}
+            onGenerate={themedRound.generate}
+          />
+        </StartScreen>
+      ) : (
+        <>
+          <GameHeader
+            state={state}
+            drawerOpen={drawerOpen}
+            rivalAvailable={themedRound.available}
+            rivalMuted={rival.muted}
+            onTogglePause={toggle}
+            onRestart={startMatch}
+            onToggleDrawer={() => setDrawerOpen((open) => !open)}
+            onToggleMute={rival.toggleMute}
+          />
+
+          <div className="relative flex-1 overflow-hidden">
+            <Game
+              state={state}
+              bursts={effects.bursts}
+              shakes={effects.shakes}
+              onResume={toggle}
+              onRestart={startMatch}
+              onExit={handleExit}
+            />
+
+            {state.status === "playing" ? (
+              <Rival
+                available={themedRound.available}
+                line={rival.line}
+                muted={rival.muted}
+                thinking={rival.thinking}
+                timeMs={state.timeMs}
+              />
+            ) : null}
+
+            <Sidebar open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+              <GameStats state={state}>
+                <RoomStandings
+                  incoming={incoming}
+                  room={room}
+                  playerId={playerId}
+                />
+              </GameStats>
+            </Sidebar>
+          </div>
+        </>
+      )}
     </div>
   );
 };

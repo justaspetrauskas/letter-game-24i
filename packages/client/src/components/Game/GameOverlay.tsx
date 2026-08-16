@@ -5,12 +5,14 @@ interface GameOverlayProps {
   state: GameState;
   onResume: () => void;
   onRestart: () => void;
+  onExit: () => void;
 }
 
 const GameOverlay: React.FC<GameOverlayProps> = ({
   state,
   onResume,
   onRestart,
+  onExit,
 }) => {
   if (state.status === "playing") {
     return null;
@@ -23,48 +25,59 @@ const GameOverlay: React.FC<GameOverlayProps> = ({
 
   return (
     <div
-      className={`absolute inset-0 flex flex-col items-center justify-center gap-6 text-slate-100 ${
-        isFinished ? "bg-slate-950/80" : "bg-slate-950/50 backdrop-blur-md"
+      className={`absolute inset-0 z-10 flex flex-col items-center justify-center gap-6 text-ink ${
+        isFinished ? "bg-scrim/85" : "bg-scrim/60 backdrop-blur-md"
       }`}
     >
-      <h2 className="text-4xl font-bold tracking-tight">
-        {isFinished ? "Game over" : "Paused"}
+      <h2 className="font-display text-5xl font-bold uppercase tracking-tight">
+        {isFinished ? "Game over" : "Time out"}
       </h2>
 
       {isFinished && (
         <dl className="flex flex-row gap-8 text-center">
           <div>
-            <dt className="text-xs uppercase tracking-widest text-slate-400">
+            <dt className="text-xs uppercase tracking-widest text-ink-faint">
               Score
             </dt>
-            <dd className="text-3xl font-bold">{state.score}</dd>
+            <dd className="font-display text-3xl font-bold">{state.score}</dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-widest text-slate-400">
+            <dt className="text-xs uppercase tracking-widest text-ink-faint">
               Best combo
             </dt>
-            <dd className="text-3xl font-bold">{state.bestCombo}</dd>
+            <dd className="font-display text-3xl font-bold">
+              {state.bestCombo}
+            </dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-widest text-slate-400">
+            <dt className="text-xs uppercase tracking-widest text-ink-faint">
               Accuracy
             </dt>
-            <dd className="text-3xl font-bold">{accuracy}%</dd>
+            <dd className="font-display text-3xl font-bold">{accuracy}%</dd>
           </div>
         </dl>
       )}
 
-      <button
-        type="button"
-        className="rounded-lg bg-emerald-500 px-6 py-3 font-bold text-slate-950 transition-colors duration-150 hover:bg-emerald-400"
-        onClick={isFinished ? onRestart : onResume}
-      >
-        {isFinished ? "Play again" : "Resume"}
-      </button>
+      <div className="flex flex-row gap-3">
+        <button
+          type="button"
+          className="lg-btn-action px-6 py-3 text-lg"
+          onClick={isFinished ? onRestart : onResume}
+        >
+          {isFinished ? "Play again" : "Resume"}
+        </button>
+        <button
+          type="button"
+          className="lg-btn-panel px-6 py-3 text-lg"
+          onClick={onExit}
+        >
+          Change setup
+        </button>
+      </div>
 
-      <p className="text-sm text-slate-400">
+      <p className="text-sm text-ink-faint">
         {isFinished
-          ? "Press play again to start a fresh seed"
+          ? "Play again keeps your setup and rolls a fresh seed"
           : "Press space or escape to resume"}
       </p>
     </div>

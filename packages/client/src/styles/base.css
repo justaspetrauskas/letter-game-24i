@@ -4,8 +4,42 @@
 
 @layer base {
   body {
-    @apply bg-slate-900;
-    font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-      Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+    @apply bg-panel-sunk font-body text-ink;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .lg-btn {
+    @apply rounded-md border-2 border-panel-outline px-4 py-2 font-display text-sm font-bold uppercase tracking-wider transition-[background-color,transform,box-shadow] duration-100 disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  .lg-btn-action {
+    @apply lg-btn bg-action text-action-ink shadow-chunk-action hover:bg-action-lit active:translate-y-1 active:shadow-none disabled:translate-y-0 disabled:shadow-none;
+  }
+
+  .lg-btn-panel {
+    @apply lg-btn bg-panel-raised text-ink shadow-chunk-sm hover:bg-panel-edge active:translate-y-0.5 active:shadow-none disabled:translate-y-0 disabled:shadow-none;
+  }
+
+  .lg-panel {
+    @apply rounded-md border-2 border-panel-outline bg-panel shadow-chunk;
+  }
+
+  .lg-inset {
+    @apply rounded-sm border-2 border-panel-outline bg-panel-sunk shadow-sunk;
+  }
+
+  .lg-field {
+    @apply rounded-sm border-2 border-panel-outline bg-panel-sunk px-3 py-2 text-sm text-ink placeholder:text-ink-faint focus:border-action focus:outline-none;
+  }
+
+  .lg-label {
+    @apply font-display text-xs font-bold uppercase tracking-[0.2em] text-ink-faint;
   }
 }
