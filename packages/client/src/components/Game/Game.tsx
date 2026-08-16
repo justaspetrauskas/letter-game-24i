@@ -1,9 +1,11 @@
 import React, { useMemo, useRef } from "react";
-import { Layer, Line, Stage } from "react-konva";
+import { Layer, Stage } from "react-konva";
 import type { GameState } from "@letter-game/engine";
 import { useStageSize } from "@/hooks/useStageSize";
+import { useThemeTokens } from "@/hooks/useThemeTokens";
 import GameLetter from "@/components/Game/GameLetter";
 import GameOverlay from "@/components/Game/GameOverlay";
+import GameScene from "@/components/Game/GameScene";
 
 interface GameProps {
   state: GameState;
@@ -17,6 +19,7 @@ const DANGER_LINE_RATIO = 0.86;
 const Game: React.FC<GameProps> = ({ state, onResume, onRestart, onExit }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { width, height } = useStageSize(containerRef);
+  const tokens = useThemeTokens();
 
   const clearableChars = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -42,18 +45,16 @@ const Game: React.FC<GameProps> = ({ state, onResume, onRestart, onExit }) => {
       {hasStage && (
         <Stage width={width} height={height}>
           <Layer listening={false}>
-            <Line
-              points={[
-                0,
-                height * DANGER_LINE_RATIO,
-                width,
-                height * DANGER_LINE_RATIO,
-              ]}
-              stroke="#f43f5e"
-              strokeWidth={1}
-              dash={[8, 10]}
-              opacity={0.4}
+            <GameScene
+              width={width}
+              height={height}
+              timeMs={state.timeMs}
+              dangerRatio={DANGER_LINE_RATIO}
+              tokens={tokens}
             />
+          </Layer>
+
+          <Layer listening={false}>
             {state.letters.map((letter) => (
               <GameLetter
                 key={letter.id}
@@ -63,6 +64,7 @@ const Game: React.FC<GameProps> = ({ state, onResume, onRestart, onExit }) => {
                 timeMs={state.timeMs}
                 lingerMs={state.config.landedLingerMs}
                 clearable={clearableChars.has(letter.char)}
+                tokens={tokens}
               />
             ))}
           </Layer>

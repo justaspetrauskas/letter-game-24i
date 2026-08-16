@@ -1,6 +1,16 @@
 import React from "react";
-import { Group, Rect, Text } from "react-konva";
+import { Circle, Group, Line, Rect, Text } from "react-konva";
 import type { LetterState } from "@letter-game/engine";
+import type { ThemeTokens } from "@/hooks/useThemeTokens";
+import {
+  clamp,
+  fuseFlicker,
+  junkBlink,
+  landedFade,
+  popProgress,
+  tileRotation,
+  tileSway,
+} from "@/components/Game/GameMotion";
 
 interface GameLetterProps {
   letter: LetterState;
@@ -9,12 +19,7 @@ interface GameLetterProps {
   timeMs: number;
   lingerMs: number;
   clearable: boolean;
-}
-
-const POP_IN_MS = 220;
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max);
+  tokens: ThemeTokens;
 }
 
 const GameLetter: React.FC<GameLetterProps> = ({
@@ -24,30 +29,37 @@ const GameLetter: React.FC<GameLetterProps> = ({
   timeMs,
   lingerMs,
   clearable,
+  tokens,
 }) => {
   const sizePx = letter.size * stageHeight;
+  const isLanded = letter.status === "landed";
+  const isJunk = letter.kind === "junk";
+  const lit = clearable && !isLanded;
+
+  const sway = isLanded ? 0 : tileSway(letter.hue, timeMs) * sizePx;
   const leftPx = clamp(
-    letter.centerX * stageWidth - sizePx / 2,
+    letter.centerX * stageWidth - sizePx / 2 + sway,
     0,
     Math.max(0, stageWidth - sizePx)
   );
   const topPx = letter.bottomY * stageHeight - sizePx;
 
-  const popProgress = clamp((timeMs - letter.spawnedAtMs) / POP_IN_MS, 0, 1);
-  const scale = 0.62 + 0.38 * popProgress;
+  const pop = popProgress(timeMs, letter.spawnedAtMs);
+  const scale = 0.62 + 0.38 * pop;
+  const fade = isLanded ? landedFade(timeMs, letter.landedAtMs, lingerMs) : 1;
 
-  const settledFor =
-    letter.landedAtMs === null ? 0 : timeMs - letter.landedAtMs;
-  const fade =
-    letter.status === "landed" ? clamp(1 - settledFor / lingerMs, 0, 1) : 1;
+  const body = isLanded ? tokens.crateShade : isJunk ? tokens.dyn : tokens.crate;
+  const plank = isLanded
+    ? tokens.crateOutline
+    : isJunk
+      ? tokens.dynPlank
+      : tokens.cratePlank;
+  const bevel = isJunk ? tokens.dynLit : tokens.crateLit;
+  const outline = isJunk ? tokens.dynOutline : tokens.crateOutline;
 
-  const isLanded = letter.status === "landed";
-  const isJunk = letter.kind === "junk";
-  const hue = isJunk ? 350 : letter.hue;
-  const fill = `hsl(${hue}, ${isLanded ? 12 : isJunk ? 74 : 68}%, ${
-    isLanded ? 32 : isJunk ? 46 : 56
-  }%)`;
-  const outline = clearable && !isLanded;
+  const inset = sizePx * 0.09;
+  const plankWidth = sizePx * 0.14;
+  const innerHeight = sizePx - inset * 2;
 
   return (
     <Group
@@ -57,24 +69,96 @@ const GameLetter: React.FC<GameLetterProps> = ({
       offsetY={sizePx / 2}
       scaleX={scale}
       scaleY={scale}
-      opacity={fade * (0.35 + 0.65 * popProgress)}
+      rotation={isLanded ? 0 : tileRotation(letter.hue)}
+      opacity={fade * (0.35 + 0.65 * pop)}
       listening={false}
     >
+      {lit ? (
+        <>
+          <Line
+            points={[
+              sizePx * 0.5,
+              0,
+              sizePx * 0.5,
+              -sizePx * 0.14,
+              sizePx * 0.62,
+              -sizePx * 0.26,
+              sizePx * 0.74,
+              -sizePx * 0.36,
+            ]}
+            stroke={tokens.fuse}
+            strokeWidth={Math.max(3, sizePx * 0.075)}
+            lineCap="round"
+            tension={0.5}
+          />
+          <Circle
+            x={sizePx * 0.76}
+            y={-sizePx * 0.4}
+            radius={sizePx * 0.22 * fuseFlicker(letter.hue, timeMs)}
+            fill={tokens.fuseGlow}
+            opacity={0.35}
+          />
+          <Circle
+            x={sizePx * 0.76}
+            y={-sizePx * 0.4}
+            radius={sizePx * 0.105 * fuseFlicker(letter.hue, timeMs)}
+            fill={tokens.fuseSpark}
+          />
+        </>
+      ) : null}
+
       <Rect
         width={sizePx}
         height={sizePx}
-        cornerRadius={sizePx / 6}
-        fill={fill}
-        stroke={outline ? "#f8fafc" : "#fda4af"}
-        strokeWidth={
-          outline || (isJunk && !isLanded) ? Math.max(2, sizePx * 0.045) : 0
-        }
-        dash={isJunk && !outline ? [sizePx * 0.12, sizePx * 0.08] : undefined}
-        shadowColor="#0f172a"
-        shadowBlur={sizePx * 0.18}
-        shadowOpacity={0.45}
-        shadowOffsetY={sizePx * 0.04}
+        cornerRadius={sizePx / 8}
+        fill={body}
+        stroke={lit ? tokens.fuseSpark : outline}
+        strokeWidth={Math.max(2, sizePx * (lit ? 0.07 : 0.055))}
+        dash={isJunk && !lit ? [sizePx * 0.14, sizePx * 0.09] : undefined}
+        shadowColor={tokens.crateOutline}
+        shadowBlur={sizePx * 0.16}
+        shadowOpacity={0.5}
+        shadowOffsetY={sizePx * 0.05}
       />
+
+      <Rect
+        x={inset}
+        y={inset}
+        width={plankWidth}
+        height={innerHeight}
+        cornerRadius={sizePx * 0.02}
+        fill={plank}
+        opacity={0.85}
+      />
+      <Rect
+        x={sizePx - inset - plankWidth}
+        y={inset}
+        width={plankWidth}
+        height={innerHeight}
+        cornerRadius={sizePx * 0.02}
+        fill={plank}
+        opacity={0.85}
+      />
+      <Rect
+        x={inset}
+        y={inset}
+        width={sizePx - inset * 2}
+        height={sizePx * 0.08}
+        cornerRadius={sizePx * 0.02}
+        fill={bevel}
+        opacity={isLanded ? 0.15 : 0.5}
+      />
+
+      {isJunk && !isLanded ? (
+        <Circle
+          x={sizePx * 0.5}
+          y={sizePx * 0.18}
+          radius={sizePx * 0.06}
+          fill={tokens.dynLight}
+          opacity={junkBlink(timeMs)}
+        />
+      ) : null}
+
       <Text
         width={sizePx}
         height={sizePx}
@@ -82,7 +166,7 @@ const GameLetter: React.FC<GameLetterProps> = ({
         fontSize={sizePx / 2}
         fontStyle="bold"
         fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace"
-        fill="#f8fafc"
+        fill={isLanded ? tokens.ink : tokens.crateFace}
         align="center"
         verticalAlign="middle"
       />
