@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { ACCESS_KEY_HEADER } from "@letter-game/protocol";
 import { buildServer } from "@/server/server";
+import { createAccessGate } from "@/access/access";
 import type { BuiltServer } from "@/server/server";
 import { RoundGenerationError, createRoundService } from "@/ai/rounds/rounds";
 import { CommentaryError, createCommentaryService } from "@/ai/commentary/commentary";
@@ -13,7 +15,10 @@ const testEnv: ServerEnv = {
   anthropicApiKey: null,
   aiModel: "claude-opus-5",
   commentaryModel: "claude-opus-5",
+  accessKeys: [],
 };
+
+const ISSUED_KEY = "press-start";
 
 const validPayload = {
   name: "Deep Ocean Drift",
@@ -46,7 +51,7 @@ describe("capabilities", () => {
     });
 
     expect(response.statusCode).toEqual(200);
-    expect(response.json()).toEqual({ ai: false });
+    expect(response.json()).toEqual({ ai: false, locked: false, unlocked: true });
   });
 
   it("reports ai on when a service is available", async () => {
@@ -58,7 +63,157 @@ describe("capabilities", () => {
       url: "/api/capabilities",
     });
 
-    expect(response.json()).toEqual({ ai: true });
+    expect(response.json()).toEqual({ ai: true, locked: false, unlocked: true });
+  });
+
+  it("reports locked but not unlocked without a key", async () => {
+    const server = start({
+      roundService: createRoundService({ complete: async () => validPayload }),
+      accessGate: createAccessGate([ISSUED_KEY]),
+    });
+    const response = await server.app.inject({
+      method: "GET",
+      url: "/api/capabilities",
+    });
+
+    expect(response.json()).toEqual({ ai: true, locked: true, unlocked: false });
+  });
+
+  it("reports unlocked when the request carries an issued key", async () => {
+    const server = start({
+      roundService: createRoundService({ complete: async () => validPayload }),
+      accessGate: createAccessGate([ISSUED_KEY]),
+    });
+    const response = await server.app.inject({
+      method: "GET",
+      url: "/api/capabilities",
+      headers: { [ACCESS_KEY_HEADER]: ISSUED_KEY },
+    });
+
+    expect(response.json()).toEqual({ ai: true, locked: true, unlocked: true });
+  });
+});
+
+describe("the access gate", () => {
+  it("refuses round generation without a key", async () => {
+    const complete = vi.fn(async () => validPayload);
+    const server = start({
+      roundService: createRoundService({ complete }),
+      accessGate: createAccessGate([ISSUED_KEY]),
+    });
+    const response = await server.app.inject({
+      method: "POST",
+      url: "/api/rounds",
+      payload: { theme: "deep ocean" },
+    });
+
+    expect(response.statusCode).toEqual(401);
+    expect(response.json().error).toEqual("locked");
+    expect(complete).not.toHaveBeenCalled();
+  });
+
+  it("refuses round generation with a wrong key", async () => {
+    const server = start({
+      roundService: createRoundService({ complete: async () => validPayload }),
+      accessGate: createAccessGate([ISSUED_KEY]),
+    });
+    const response = await server.app.inject({
+      method: "POST",
+      url: "/api/rounds",
+      payload: { theme: "deep ocean" },
+      headers: { [ACCESS_KEY_HEADER]: "guessing" },
+    });
+
+    expect(response.statusCode).toEqual(401);
+  });
+
+  it("generates a round for an issued key", async () => {
+    const server = start({
+      roundService: createRoundService({ complete: async () => validPayload }),
+      accessGate: createAccessGate([ISSUED_KEY]),
+    });
+    const response = await server.app.inject({
+      method: "POST",
+      url: "/api/rounds",
+      payload: { theme: "deep ocean" },
+      headers: { [ACCESS_KEY_HEADER]: ISSUED_KEY },
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.json().name).toEqual("Deep Ocean Drift");
+  });
+
+  it("refuses commentary without a key", async () => {
+    const complete = vi.fn(async () => "should not be called");
+    const server = start({
+      commentaryService: createCommentaryService({ complete }),
+      accessGate: createAccessGate([ISSUED_KEY]),
+    });
+    const response = await server.app.inject({
+      method: "POST",
+      url: "/api/commentary",
+      payload: { snapshot: { misses: 3, missedChars: ["a"] }, recentLines: [] },
+    });
+
+    expect(response.statusCode).toEqual(401);
+    expect(complete).not.toHaveBeenCalled();
+  });
+
+  it("comments for an issued key", async () => {
+    const server = start({
+      commentaryService: createCommentaryService({
+        complete: async () => "Sloppy.",
+      }),
+      accessGate: createAccessGate([ISSUED_KEY]),
+    });
+    const response = await server.app.inject({
+      method: "POST",
+      url: "/api/commentary",
+      payload: { snapshot: { misses: 3, missedChars: ["a"] }, recentLines: [] },
+      headers: { [ACCESS_KEY_HEADER]: ISSUED_KEY },
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.json().line).toEqual("Sloppy.");
+  });
+
+  it("does not spend a rate limit token on a locked request", async () => {
+    const server = start({
+      roundService: createRoundService({ complete: async () => validPayload }),
+      accessGate: createAccessGate([ISSUED_KEY]),
+      rateLimiter: createRateLimiter({
+        capacity: 1,
+        refillMs: 60_000,
+        now: () => 0,
+      }),
+    });
+
+    await server.app.inject({
+      method: "POST",
+      url: "/api/rounds",
+      payload: { theme: "one" },
+    });
+    const unlocked = await server.app.inject({
+      method: "POST",
+      url: "/api/rounds",
+      payload: { theme: "two" },
+      headers: { [ACCESS_KEY_HEADER]: ISSUED_KEY },
+    });
+
+    expect(unlocked.statusCode).toEqual(200);
+  });
+
+  it("still reports an unconfigured server as unavailable, not locked", async () => {
+    const server = start({ accessGate: createAccessGate([ISSUED_KEY]) });
+    const response = await server.app.inject({
+      method: "POST",
+      url: "/api/rounds",
+      payload: { theme: "deep ocean" },
+      headers: { [ACCESS_KEY_HEADER]: ISSUED_KEY },
+    });
+
+    expect(response.statusCode).toEqual(503);
+    expect(response.json().error).toEqual("ai_unavailable");
   });
 });
 

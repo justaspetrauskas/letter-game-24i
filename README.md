@@ -120,7 +120,8 @@ cp .env.example .env
 ```
 
 Without a key the rest of the game works exactly as before and the panel just says so. The key
-lives only on the server; the browser never sees it.
+lives only on the server; the browser never sees it. On a public build the feature is gated
+again on top of that — see [Locking the AI features](#locking-the-ai-features).
 
 Anything the model returns is clamped by the same `sanitiseGameConfig` that guards untrusted
 socket clients, because a generated round is just a `Partial<GameConfig>` and an empty letter
@@ -157,6 +158,35 @@ it chatty.
 `ANTHROPIC_COMMENTARY_MODEL` sets the rival's model separately, since it fires far more often
 than round generation.
 
+## Locking the AI features
+
+Both AI features cost money per call, which is a problem on a build anyone can open. So on a
+public deploy they are locked rather than hidden: the start screen lists what each one is and
+what it does, shows them greyed with a **Locked** badge, and asks for a key. The in-game header
+says `Rival locked` where the mute button would be. Nobody has to guess the features exist.
+
+Set `AI_ACCESS_KEYS` on the server and the browser has to present one of those keys before
+`/api/rounds` or `/api/commentary` will answer:
+
+```bash
+AI_ACCESS_KEYS=press-start,second-key
+```
+
+Leave it unset — the local default — and both endpoints are open to anyone who can reach the
+server.
+
+The key is a pass I hand out, not an Anthropic key: the Anthropic key stays on the server and
+the browser never sees it. A visitor pastes their pass into the start screen, it's checked
+against `/api/capabilities`, and it lives in `localStorage` from then on, so it survives a
+reload and can be dropped again with **Forget key**. A key the server no longer recognises is
+discarded on the next load rather than failing silently mid-game. Issue a different key per
+person and you can drop one from the list without disturbing anyone else.
+
+It's a demo pass over HTTP, not authentication. Anyone holding a key can spend calls until it's
+rotated, and the per-IP rate limits are still what stop one visitor running up a bill. The gate
+is checked *before* the rate limiter, though, so a stream of keyless requests can't exhaust a
+legitimate visitor's budget.
+
 ## Rounds
 
 Rounds are just config, so new ones are a few lines in `packages/engine/src/config.ts`:
@@ -166,3 +196,15 @@ Rounds are just config, so new ones are a few lines in `packages/engine/src/conf
 - **Alphabet** — all 26
 - **Triples** — needs three matching letters, not two
 - **Sprint** — ten lives, everything faster
+
+The start screen prints a line describing whichever round is selected, because a five-word
+label doesn't tell you that Alphabet is a hunting round and Vowels is a blur.
+
+Triples needed tuning to be worth playing. Raising `minMatch` to 3 without touching anything
+else made the round mostly dead time: with letters arriving every ~2.1s and a five-letter pool,
+a third copy of any letter was on screen rarely enough that a bot playing perfectly waited 7.7
+seconds between clears and still lost 21 of its 25 lives in two minutes — worse than Home row,
+and not because the player was slow. The fix is spawn rate, not the rule: `spawnDelayMs` drops
+to `[1200, 1700]`, which keeps the board stocked enough that three of a kind is a normal event.
+Same bot now clears every 2.5s and outlasts Home row. Making a round harder by making its win
+condition rarer just adds waiting; the density has to move with it.

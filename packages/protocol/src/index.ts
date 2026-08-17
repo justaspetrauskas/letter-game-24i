@@ -12,6 +12,13 @@ export {
 export type { NumericBound } from "./config";
 
 export {
+  ACCESS_KEY_HEADER,
+  MAX_ACCESS_KEY_LENGTH,
+  accessKeysMatch,
+  sanitiseAccessKey,
+} from "./access";
+
+export {
   MAX_THEME_LENGTH,
   MIN_GENERATED_POOL_SIZE,
   isValidTheme,

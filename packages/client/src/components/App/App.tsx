@@ -6,6 +6,7 @@ import type { GameEvent, GameState } from "@letter-game/engine";
 import { useBursts } from "@/hooks/useBursts";
 import { useRoom } from "@/hooks/useRoom";
 import { useThemedRound } from "@/hooks/useThemedRound";
+import { useAiAccess } from "@/hooks/useAiAccess";
 import { useRival } from "@/hooks/useRival";
 import { easeConfigForViewport, useMatchSetup } from "@/hooks/useMatchSetup";
 import Game from "@/components/Game/Game";
@@ -14,6 +15,7 @@ import GameStats from "@/components/GameStats/GameStats";
 import Sidebar from "@/components/Sidebar/Sidebar";
 import StartScreen from "@/components/StartScreen/StartScreen";
 import RoomStandings from "@/components/Room/RoomStandings";
+import AiPanel from "@/components/AiPanel/AiPanel";
 import RoundForge from "@/components/RoundForge/RoundForge";
 import Rival from "@/components/Rival/Rival";
 
@@ -22,11 +24,11 @@ type Phase = "menu" | "playing";
 const App: React.FC = () => {
   const [phase, setPhase] = useState<Phase>("menu");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [aiReady, setAiReady] = useState(false);
   const [incoming, setIncoming] = useState<AttackedPayload | null>(null);
 
   const setup = useMatchSetup();
-  const rival = useRival({ enabled: aiReady });
+  const access = useAiAccess();
+  const rival = useRival({ enabled: access.ready, accessKey: access.key });
   const effects = useBursts();
 
   const receiveJunkRef = useRef<(count: number) => void>(() => undefined);
@@ -144,11 +146,10 @@ const App: React.FC = () => {
     [setup.selectThemed]
   );
 
-  const themedRound = useThemedRound({ onRound: handleGeneratedRound });
-
-  useEffect(() => {
-    setAiReady(themedRound.available);
-  }, [themedRound.available]);
+  const themedRound = useThemedRound({
+    accessKey: access.key,
+    onRound: handleGeneratedRound,
+  });
 
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden bg-panel-sunk text-ink">
@@ -164,21 +165,22 @@ const App: React.FC = () => {
           onLeaveRoom={leaveRoom}
           onStart={handleStart}
         >
-          <RoundForge
-            serverReachable={themedRound.serverReachable}
-            available={themedRound.available}
-            status={themedRound.status}
-            round={themedRound.round}
-            error={themedRound.error}
-            onGenerate={themedRound.generate}
-          />
+          <AiPanel access={access}>
+            <RoundForge
+              status={themedRound.status}
+              round={themedRound.round}
+              error={themedRound.error}
+              onGenerate={themedRound.generate}
+            />
+          </AiPanel>
         </StartScreen>
       ) : (
         <>
           <GameHeader
             state={state}
             drawerOpen={drawerOpen}
-            rivalAvailable={themedRound.available}
+            rivalAvailable={access.ready}
+            rivalLocked={access.configured && !access.ready}
             rivalMuted={rival.muted}
             onTogglePause={toggle}
             onRestart={startMatch}
@@ -198,7 +200,7 @@ const App: React.FC = () => {
 
             {state.status === "playing" ? (
               <Rival
-                available={themedRound.available}
+                available={access.ready}
                 line={rival.line}
                 muted={rival.muted}
                 thinking={rival.thinking}

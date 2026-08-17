@@ -1,3 +1,5 @@
+import { readAccessKeys } from "@/access/access";
+
 export interface ServerEnv {
   port: number;
   host: string;
@@ -5,6 +7,7 @@ export interface ServerEnv {
   anthropicApiKey: string | null;
   aiModel: string;
   commentaryModel: string;
+  accessKeys: string[];
 }
 
 export const DEFAULT_ROUND_MODEL = "claude-sonnet-5";
@@ -23,5 +26,6 @@ export function readEnv(source: NodeJS.ProcessEnv = process.env): ServerEnv {
     aiModel: source.ANTHROPIC_MODEL?.trim() || DEFAULT_ROUND_MODEL,
     commentaryModel:
       source.ANTHROPIC_COMMENTARY_MODEL?.trim() || DEFAULT_COMMENTARY_MODEL,
+    accessKeys: readAccessKeys(source.AI_ACCESS_KEYS),
   };
 }

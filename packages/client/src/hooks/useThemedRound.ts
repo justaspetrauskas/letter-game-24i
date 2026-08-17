@@ -1,16 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { isValidTheme, sanitiseTheme } from "@letter-game/protocol";
-import type { CapabilitiesResponse, ThemedRound } from "@letter-game/protocol";
+import {
+  ACCESS_KEY_HEADER,
+  isValidTheme,
+  sanitiseTheme,
+} from "@letter-game/protocol";
+import type { ThemedRound } from "@letter-game/protocol";
 
 export type RoundStatus = "idle" | "loading" | "error";
 
 export interface UseThemedRoundOptions {
+  accessKey?: string | null;
   onRound?: (round: ThemedRound) => void;
 }
 
 export interface UseThemedRoundResult {
-  serverReachable: boolean;
-  available: boolean;
   status: RoundStatus;
   round: ThemedRound | null;
   error: string | null;
@@ -32,36 +35,20 @@ async function readError(response: Response): Promise<string> {
 export function useThemedRound(
   options: UseThemedRoundOptions = {}
 ): UseThemedRoundResult {
-  const [serverReachable, setServerReachable] = useState(false);
-  const [available, setAvailable] = useState(false);
   const [status, setStatus] = useState<RoundStatus>("idle");
   const [round, setRound] = useState<ThemedRound | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const onRoundRef = useRef(options.onRound);
+  const accessKeyRef = useRef(options.accessKey ?? null);
 
   useEffect(() => {
     onRoundRef.current = options.onRound;
   }, [options.onRound]);
 
   useEffect(() => {
-    let cancelled = false;
-
-    fetch("/api/capabilities")
-      .then((response) => (response.ok ? response.json() : null))
-      .then((body: CapabilitiesResponse | null) => {
-        if (cancelled || body === null) {
-          return;
-        }
-        setServerReachable(true);
-        setAvailable(body.ai === true);
-      })
-      .catch(() => undefined);
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    accessKeyRef.current = options.accessKey ?? null;
+  }, [options.accessKey]);
 
   const generate = useCallback((rawTheme: string) => {
     if (!isValidTheme(rawTheme)) {
@@ -73,9 +60,14 @@ export function useThemedRound(
     setStatus("loading");
     setError(null);
 
+    const key = accessKeyRef.current;
+
     fetch("/api/rounds", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        ...(key === null ? {} : { [ACCESS_KEY_HEADER]: key }),
+      },
       body: JSON.stringify({ theme: sanitiseTheme(rawTheme) }),
     })
       .then(async (response) => {
@@ -95,5 +87,5 @@ export function useThemedRound(
       });
   }, []);
 
-  return { serverReachable, available, status, round, error, generate };
+  return { status, round, error, generate };
 }

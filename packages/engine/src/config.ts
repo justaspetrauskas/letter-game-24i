@@ -32,7 +32,12 @@ export const roundPresets: Record<string, Partial<GameConfig>> = {
   homeRow: { letterPool: "asdfghjkl" },
   vowels: { letterPool: "aeiou", minMatch: 2 },
   fullAlphabet: { letterPool: "abcdefghijklmnopqrstuvwxyz", minMatch: 2 },
-  triples: { letterPool: "asdfg", minMatch: 3, lives: 25 },
+  triples: {
+    letterPool: "asdfg",
+    minMatch: 3,
+    lives: 25,
+    spawnDelayMs: [1200, 1700],
+  },
   sprint: {
     letterPool: "asdfghjkl",
     lives: 10,

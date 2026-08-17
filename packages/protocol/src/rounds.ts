@@ -14,6 +14,7 @@ export interface ThemedRound {
 
 export type RoundErrorCode =
   | "ai_unavailable"
+  | "locked"
   | "invalid_theme"
   | "rate_limited"
   | "generation_failed"
@@ -26,6 +27,8 @@ export interface RoundError {
 
 export interface CapabilitiesResponse {
   ai: boolean;
+  locked: boolean;
+  unlocked: boolean;
 }
 
 export function sanitiseTheme(raw: unknown): string {

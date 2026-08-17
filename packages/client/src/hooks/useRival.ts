@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ACCESS_KEY_HEADER,
   MAX_BUFFERED_EVENTS,
   RIVAL_HISTORY_SIZE,
   RIVAL_MIN_INTERVAL_MS,
@@ -14,6 +15,7 @@ const TICK_MS = 1000;
 
 export interface UseRivalOptions {
   enabled: boolean;
+  accessKey?: string | null;
 }
 
 export interface UseRivalResult {
@@ -35,11 +37,16 @@ export function useRival(options: UseRivalOptions): UseRivalResult {
   const lastLineAtRef = useRef(0);
   const inFlightRef = useRef(false);
   const enabledRef = useRef(options.enabled);
+  const accessKeyRef = useRef(options.accessKey ?? null);
   const mutedRef = useRef(muted);
 
   useEffect(() => {
     enabledRef.current = options.enabled;
   }, [options.enabled]);
+
+  useEffect(() => {
+    accessKeyRef.current = options.accessKey ?? null;
+  }, [options.accessKey]);
 
   useEffect(() => {
     mutedRef.current = muted;
@@ -88,9 +95,14 @@ export function useRival(options: UseRivalOptions): UseRivalResult {
       inFlightRef.current = true;
       setThinking(true);
 
+      const key = accessKeyRef.current;
+
       fetch("/api/commentary", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          ...(key === null ? {} : { [ACCESS_KEY_HEADER]: key }),
+        },
         body: JSON.stringify({
           snapshot,
           recentLines: historyRef.current,

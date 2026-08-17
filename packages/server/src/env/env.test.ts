@@ -38,6 +38,14 @@ describe("readEnv", () => {
     expect(readEnv({ ANTHROPIC_API_KEY: "   " }).anthropicApiKey).toBeNull();
   });
 
+  it("reads the issued access keys as a list", () => {
+    expect(readEnv({ AI_ACCESS_KEYS: "one, two" }).accessKeys).toEqual([
+      "one",
+      "two",
+    ]);
+    expect(readEnv({}).accessKeys).toEqual([]);
+  });
+
   it("falls back to 4000 for an unparseable port", () => {
     expect(readEnv({ PORT: "not-a-port" }).port).toEqual(4000);
     expect(readEnv({ PORT: "5000" }).port).toEqual(5000);

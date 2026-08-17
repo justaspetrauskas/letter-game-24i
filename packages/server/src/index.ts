@@ -17,6 +17,7 @@ async function start(): Promise<void> {
     app.log.info(
       {
         ai: rounds.available,
+        aiKeysIssued: env.accessKeys.length,
         roundModel: rounds.available ? env.aiModel : null,
         commentaryModel: commentary.available ? env.commentaryModel : null,
       },

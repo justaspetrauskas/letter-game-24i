@@ -25,7 +25,8 @@ beforeEach(async () => {
     clientOrigin: "*",
     anthropicApiKey: null,
     aiModel: "claude-opus-5",
-  commentaryModel: "claude-opus-5",
+    commentaryModel: "claude-opus-5",
+    accessKeys: [],
   });
   await built.app.listen({ port: 0, host: "127.0.0.1" });
 

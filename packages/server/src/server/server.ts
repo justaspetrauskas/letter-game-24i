@@ -6,6 +6,7 @@ import fastifyStatic from "@fastify/static";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { STEP_MS, createGame, stepMany } from "@letter-game/engine";
 import {
+  ACCESS_KEY_HEADER,
   sanitiseRecentLines,
   sanitiseRivalSnapshot,
   shouldCommentate,
@@ -15,6 +16,8 @@ import type {
   RivalResponse,
   ThemedRound,
 } from "@letter-game/protocol";
+import { createAccessGate } from "@/access/access";
+import type { AccessGate } from "@/access/access";
 import { RoomRegistry } from "@/rooms/rooms";
 import { attachSocketServer } from "@/socket/socket";
 import type { GameSocketServer } from "@/socket/socket";
@@ -43,17 +46,22 @@ const RIVAL_REFILL_MS = 6_000;
 
 const statusByRoundError: Record<string, number> = {
   ai_unavailable: 503,
+  locked: 401,
   invalid_theme: 400,
   rate_limited: 429,
   generation_failed: 502,
   refused: 422,
 };
 
+const LOCKED_MESSAGE =
+  "The AI features are key-only on this build. Ask for a key.";
+
 export interface BuildServerOptions {
   roundService?: RoundService;
   commentaryService?: CommentaryService;
   rateLimiter?: RateLimiter;
   rivalRateLimiter?: RateLimiter;
+  accessGate?: AccessGate;
 }
 
 export interface BuiltServer {
@@ -67,6 +75,10 @@ export interface BuiltServer {
 
 function clientKey(request: FastifyRequest): string {
   return request.ip ?? "unknown";
+}
+
+function offeredKey(request: FastifyRequest): unknown {
+  return request.headers[ACCESS_KEY_HEADER];
 }
 
 export function buildServer(
@@ -104,6 +116,8 @@ export function buildServer(
       refillMs: RIVAL_REFILL_MS,
     });
 
+  const access = options.accessGate ?? createAccessGate(env.accessKeys);
+
   app.get("/health", async () => ({
     status: "ok",
     stepMs: STEP_MS,
@@ -111,9 +125,14 @@ export function buildServer(
     players: registry.playerCount,
   }));
 
-  app.get("/api/capabilities", async (): Promise<CapabilitiesResponse> => ({
-    ai: rounds.available,
-  }));
+  app.get(
+    "/api/capabilities",
+    async (request): Promise<CapabilitiesResponse> => ({
+      ai: rounds.available,
+      locked: access.required,
+      unlocked: access.allows(offeredKey(request)),
+    })
+  );
 
   app.post<{ Body: { theme?: unknown } }>(
     "/api/rounds",
@@ -125,6 +144,12 @@ export function buildServer(
             error: "ai_unavailable",
             message: "Round generation is not configured on this server.",
           });
+      }
+
+      if (!access.allows(offeredKey(request))) {
+        return reply
+          .status(statusByRoundError.locked)
+          .send({ error: "locked", message: LOCKED_MESSAGE });
       }
 
       if (!roundLimiter.take(clientKey(request))) {
@@ -163,6 +188,12 @@ export function buildServer(
           error: "ai_unavailable",
           message: "Commentary is not configured on this server.",
         });
+      }
+
+      if (!access.allows(offeredKey(request))) {
+        return reply
+          .status(401)
+          .send({ error: "locked", message: LOCKED_MESSAGE });
       }
 
       if (!rivalLimiter.take(clientKey(request))) {

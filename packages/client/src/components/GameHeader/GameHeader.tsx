@@ -7,6 +7,7 @@ interface GameHeaderProps {
   state: GameState;
   drawerOpen: boolean;
   rivalAvailable: boolean;
+  rivalLocked: boolean;
   rivalMuted: boolean;
   onTogglePause: () => void;
   onRestart: () => void;
@@ -18,6 +19,7 @@ const GameHeader: React.FC<GameHeaderProps> = ({
   state,
   drawerOpen,
   rivalAvailable,
+  rivalLocked,
   rivalMuted,
   onTogglePause,
   onRestart,
@@ -50,6 +52,13 @@ const GameHeader: React.FC<GameHeaderProps> = ({
           >
             {rivalMuted ? "Rival off" : "Rival on"}
           </button>
+        ) : rivalLocked ? (
+          <span
+            title="The rival needs an access key. Ask for one on the start screen."
+            className="hidden items-center rounded-sm border-2 border-panel-edge bg-panel-sunk px-2 py-1 font-display text-xs font-bold uppercase tracking-widest text-ink-faint sm:flex"
+          >
+            Rival locked
+          </span>
         ) : null}
         <button
           type="button"
